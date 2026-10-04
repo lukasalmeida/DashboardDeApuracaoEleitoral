@@ -73,6 +73,14 @@ TSE_STATE_SECOND_TURN_CODE=6260
 
 Depois aplique as alterações com `docker compose up -d --build` e abra <http://localhost:8001>. Não use `docker compose down` se quiser que o serviço continue em execução; para reiniciá-lo manualmente, use `docker compose restart`.
 
+## Deploy no Render com CI/CD
+
+O arquivo `render.yaml` configura um Web Service Docker no Render, usando o `Dockerfile` deste repositório. Para criar o serviço, no Render selecione **New + > Blueprint** e conecte este repositório. O deploy automático do Render fica desativado para que a publicação seja feita somente depois da validação do GitHub Actions.
+
+No serviço criado no Render, gere um **Deploy Hook** em **Settings > Deploy Hook**. No GitHub, adicione a URL como secret do repositório em **Settings > Secrets and variables > Actions**, com o nome `RENDER_DEPLOY_HOOK_URL`.
+
+O workflow `.github/workflows/ci-cd.yml` verifica a sintaxe PHP e constrói a imagem Docker em pull requests e pushes para `main`. Após um push validado em `main`, ele aciona o Deploy Hook. Também é possível iniciar a validação e a publicação manualmente pela aba **Actions**, selecionando a branch `main`.
+
 ## Integração
 
 O endpoint `api/results.php` consulta o formato unificado de totalização do TSE:
