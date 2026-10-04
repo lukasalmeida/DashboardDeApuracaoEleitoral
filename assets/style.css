@@ -13,6 +13,11 @@
     --amber: #ecaa4b;
     --red: #dd6966;
     --orange: #f05609;
+    --chart-text: #44546a;
+    --chart-muted: #8d99a8;
+    --chart-grid: #e9edf2;
+    --chart-bar: #7bcbb2;
+    --chart-track: #f0f3f7;
     font-family: 'DM Sans', sans-serif;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -156,6 +161,37 @@ h2 { color: #26354a; font: 700 12px Manrope, sans-serif; letter-spacing: -.15px;
 .page-footer a { color: var(--orange); font-weight: 600; }
 .states-page-panel, .candidates-page-panel { padding-bottom: 18px; }
 .states-page-panel .panel-heading, .candidates-page-panel .panel-heading { margin-bottom: 16px; }
+.charts-page-panel { padding: 18px 20px 0; }
+.chart-controls { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 24px; padding: 12px; border: 1px solid #edf0f4; border-radius: 8px; background: #fafbfd; }
+.chart-control { display: grid; min-width: 175px; gap: 7px; padding: 2px 7px; }
+.chart-control > span { color: #9aa5b2; font-size: 8px; font-weight: 700; letter-spacing: .8px; }
+.chart-control select { width: 100%; max-width: 100%; min-height: 32px; padding: 0 28px 0 9px; border: 1px solid #e6eaf0; border-radius: 6px; background: #fff; color: #405067; font-size: 10px; font-weight: 600; cursor: pointer; }
+.chart-result-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.chart-result-heading p { margin-top: 5px; color: #99a4b1; font-size: 9px; }
+.chart-canvas { min-height: 270px; overflow: auto; }
+.chart-canvas .empty-state { min-height: 270px; }
+.results-svg { display: block; height: auto; overflow: visible; }
+.horizontal-svg { width: 100%; min-width: 760px; }
+.column-svg { width: 100%; min-width: 700px; }
+.chart-label { fill: var(--chart-text); font: 600 12px 'DM Sans', sans-serif; }
+.chart-sub-label { fill: var(--chart-muted); font: 10px 'DM Sans', sans-serif; }
+.chart-value, .chart-column-value { fill: var(--chart-text); font: 600 11px 'DM Sans', sans-serif; }
+.chart-column-label { fill: var(--chart-text); font: 600 10px 'DM Sans', sans-serif; }
+.chart-axis-label { fill: var(--chart-muted); font: 9px 'DM Sans', sans-serif; }
+.chart-gridline { stroke: var(--chart-grid); stroke-width: 1; }
+.chart-track { fill: var(--chart-track); }
+.chart-zero-state { display: grid; min-height: 250px; place-items: center; color: #8d99a8; font-size: 10px; text-align: center; }
+.donut-chart-layout { display: flex; min-height: 300px; align-items: center; justify-content: center; gap: 35px; padding: 0 10px; }
+.donut-svg { width: min(300px, 45%); flex: 0 1 300px; }
+.donut-total { fill: var(--chart-text); font: 700 32px Manrope, sans-serif; }
+.donut-caption { fill: var(--chart-muted); font: 11px 'DM Sans', sans-serif; }
+.donut-legend { display: grid; width: min(390px, 52%); gap: 13px; }
+.donut-legend-item { display: grid; grid-template-columns: 9px minmax(0, 1fr) auto; align-items: center; gap: 9px; color: var(--chart-muted); font-size: 10px; }
+.donut-legend-item i { width: 8px; height: 8px; border-radius: 3px; background: var(--legend-color); }
+.donut-legend-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.donut-legend-item strong { color: var(--chart-text); font-size: 10px; font-weight: 600; }
+.chart-disclaimer { padding: 12px 0 16px; border-top: 1px solid #eff1f4; color: #9aa5b1; font-size: 8px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 .states-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .state-card { min-height: 55px; padding: 0 12px; font-size: 10px; }
 .state-card .state-code { width: 30px; height: 30px; flex-basis: 30px; }
@@ -185,6 +221,11 @@ html[data-theme="dark"] {
     --canvas: #111821;
     --white: #1b2531;
     --navy: #111a24;
+    --chart-text: #e5ebf3;
+    --chart-muted: #a0adbd;
+    --chart-grid: #354252;
+    --chart-bar: #329b7e;
+    --chart-track: #263240;
 }
 html[data-theme="dark"] body { background: var(--canvas); color: var(--ink); }
 html[data-theme="dark"] .sidebar { background: var(--navy); }
@@ -236,6 +277,13 @@ html[data-theme="dark"] .table-rank,
 html[data-theme="dark"] .table-empty,
 html[data-theme="dark"] .empty-state { color: #a0adbd; }
 html[data-theme="dark"] .filter-control select option { background: #1b2531; color: #edf2f8; }
+html[data-theme="dark"] .chart-controls { border-color: #303c4b; background: #17212c; }
+html[data-theme="dark"] .chart-control > span { color: #a0adbd; }
+html[data-theme="dark"] .chart-control select { border-color: #354252; background: #1b2531; color: #edf2f8; }
+html[data-theme="dark"] .chart-result-heading p,
+html[data-theme="dark"] .chart-disclaimer,
+html[data-theme="dark"] .chart-zero-state { color: #a0adbd; }
+html[data-theme="dark"] .chart-disclaimer { border-color: #303c4b; }
 html[data-theme="dark"] .filter-divider,
 html[data-theme="dark"] .candidate-row,
 html[data-theme="dark"] .panel-footer,
@@ -285,6 +333,10 @@ html[data-theme="dark"] .error-state .empty-symbol { background: #3c282a; color:
     .dashboard-grid { grid-template-columns: 1fr; }
     .turnout-chart { min-height: 220px; }
     .states-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .chart-control { min-width: min(175px, calc(50% - 10px)); flex: 1; }
+    .donut-chart-layout { flex-direction: column; gap: 12px; padding: 8px 0; }
+    .donut-svg { width: min(270px, 100%); flex: 0 1 auto; }
+    .donut-legend { width: 100%; padding: 0 8px 14px; }
 }
 @media (max-width: 560px) {
     .topbar { height: 57px; padding: 0 12px; }
@@ -317,6 +369,11 @@ html[data-theme="dark"] .error-state .empty-symbol { background: #3c282a; color:
     .candidate-votes strong, .candidate-share strong { font-size: 8px; }
     .state-chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .states-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .charts-page-panel { padding-right: 13px; padding-left: 13px; }
+    .chart-controls { gap: 8px; margin-bottom: 17px; padding: 8px; }
+    .chart-control { min-width: 100%; }
+    .chart-result-heading { align-items: center; }
+    .chart-result-heading .data-tag { font-size: 6px; }
     .page-footer { flex-direction: column; padding-top: 4px; }
     .panel-footer { font-size: 7px; }
 }

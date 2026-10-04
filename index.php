@@ -35,6 +35,9 @@ $year = htmlspecialchars($config['election_year'], ENT_QUOTES, 'UTF-8');
             <a class="nav-link" href="#candidates" data-page="candidates">
                 <span class="nav-icon">♙</span><span>Candidaturas</span>
             </a>
+            <a class="nav-link" href="#charts" data-page="charts">
+                <span class="nav-icon">▥</span><span>Gráficos</span>
+            </a>
         </nav>
 
         <div class="sidebar-bottom">
@@ -197,6 +200,46 @@ $year = htmlspecialchars($config['election_year'], ENT_QUOTES, 'UTF-8');
                         <table><thead><tr><th>POSIÇÃO</th><th>CANDIDATURA</th><th>PARTIDO</th><th>SITUAÇÃO</th><th>VOTOS</th><th>% VÁLIDOS</th></tr></thead>
                             <tbody id="candidate-table"><tr><td colspan="6" class="table-empty">Aguardando dados do TSE.</td></tr></tbody></table>
                     </div>
+                </section>
+            </section>
+
+            <section class="page-view" id="page-charts" data-view="charts">
+                <div class="page-heading">
+                    <div><div class="eyebrow">VISUALIZAÇÃO PERSONALIZADA</div><h1>Gráficos da apuração</h1><p class="page-description">Compare o desempenho das candidaturas com os resultados oficiais da seleção atual.</p></div>
+                </div>
+                <section class="panel charts-page-panel">
+                    <div class="chart-controls" aria-label="Personalizar gráfico">
+                        <label class="chart-control">
+                            <span>TIPO DE GRÁFICO</span>
+                            <select id="chart-type" aria-label="Tipo de gráfico">
+                                <option value="horizontal">Barras horizontais</option>
+                                <option value="columns">Colunas</option>
+                                <option value="donut">Rosca</option>
+                            </select>
+                        </label>
+                        <label class="chart-control">
+                            <span>COMPARAR POR</span>
+                            <select id="chart-metric" aria-label="Métrica do gráfico">
+                                <option value="votes">Total de votos</option>
+                                <option value="share">Percentual de votos válidos</option>
+                            </select>
+                        </label>
+                        <label class="chart-control">
+                            <span>CANDIDATURAS</span>
+                            <select id="chart-limit" aria-label="Quantidade de candidaturas">
+                                <option value="5">5 mais votadas</option>
+                                <option value="10">10 mais votadas</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="chart-result-heading">
+                        <div><h2 id="chart-title">Candidaturas mais votadas</h2><p id="chart-subtitle">Aguardando resultados oficiais do TSE.</p></div>
+                        <span class="data-tag"><i></i> DADOS DO TSE</span>
+                    </div>
+                    <div class="chart-canvas" id="results-chart" aria-live="polite">
+                        <div class="empty-state"><span class="empty-symbol">◷</span><strong>Aguardando resultados</strong><span>O gráfico será montado assim que os dados oficiais forem carregados.</span></div>
+                    </div>
+                    <p class="chart-disclaimer">Os dados e percentuais podem mudar até o encerramento da totalização.</p>
                 </section>
             </section>
 

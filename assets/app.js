@@ -18,6 +18,10 @@
         candidateList: document.querySelector('#candidate-list'),
         candidateCount: document.querySelector('#candidate-count'),
         candidateTable: document.querySelector('#candidate-table'),
+        chart: document.querySelector('#results-chart'),
+        chartType: document.querySelector('#chart-type'),
+        chartMetric: document.querySelector('#chart-metric'),
+        chartLimit: document.querySelector('#chart-limit'),
         toast: document.querySelector('#toast'),
     };
     let currentPayload = null;
@@ -64,8 +68,14 @@
         return Number.isFinite(parsed) ? parsed : 0;
     };
 
+    const percentNumber = (value) => {
+        if (typeof value === 'number') return value;
+        const parsed = Number(String(value ?? '').trim().replace(',', '.'));
+        return Number.isFinite(parsed) ? parsed : numeric(value);
+    };
+
     const percent = (value) => {
-        const parsed = numeric(value);
+        const parsed = percentNumber(value);
         return `${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(parsed)}%`;
     };
 
@@ -189,6 +199,7 @@
             ? `${candidates.length} candidaturas no resultado`
             : 'Nenhuma candidatura encontrada para este filtro.';
         renderCandidates(candidates);
+        renderChart(candidates);
     };
 
     const renderCandidates = (candidates) => {
@@ -205,7 +216,7 @@
             const name = getValue(candidate, ['nm', 'nmu', 'nome', 'nomeurna', 'cc'], 'Candidatura');
             const party = getValue(candidate, ['sgp', 'partido', 'siglaPartido'], '—');
             const votes = getValue(candidate, ['vap', 'votos', 'votosNominais'], 0);
-            const votePercent = getValue(candidate, ['pvap', 'percentual', 'percentualVotos'], '0');
+            const votePercent = percentNumber(getValue(candidate, ['pvap', 'percentual', 'percentualVotos'], '0'));
             const image = candidate.foto ? `<img src="${escapeHtml(candidate.foto)}" alt="" loading="lazy">` : `<span>${escapeHtml(initials(name))}</span>`;
             return `<article class="candidate-row">
                 <span class="candidate-rank">${String(index + 1).padStart(2, '0')}</span>
@@ -233,6 +244,142 @@
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
     })[character]);
 
+    const renderChartMessage = (title, message, isError = false) => {
+        elements.chart.innerHTML = `<div class="empty-state${isError ? ' error-state' : ''}"><span class="empty-symbol">${isError ? '!' : '◷'}</span><strong>${escapeHtml(title)}</strong><span>${escapeHtml(message)}</span></div>`;
+    };
+
+    const renderChart = (candidates) => {
+        const metric = elements.chartMetric.value;
+        const limit = Number(elements.chartLimit.value);
+        const sorted = [...candidates]
+            .sort((a, b) => numeric(b.vap ?? b.votos) - numeric(a.vap ?? a.votos))
+            .slice(0, limit)
+            .map((candidate) => ({
+                name: String(getValue(candidate, ['nm', 'nmu', 'nome', 'nomeurna', 'cc'], 'Candidatura')),
+                party: String(getValue(candidate, ['sgp', 'partido', 'siglaPartido'], '—')),
+                votes: numeric(getValue(candidate, ['vap', 'votos', 'votosNominais'], 0)),
+                share: percentNumber(getValue(candidate, ['pvap', 'percentual', 'percentualVotos'], 0)),
+            }));
+        const chartType = elements.chartType.value;
+        const metricLabel = metric === 'votes' ? 'votos' : '% dos votos válidos';
+        const title = chartType === 'donut'
+            ? 'Distribuição das candidaturas'
+            : metric === 'votes' ? 'Votos por candidatura' : 'Percentual por candidatura';
+        document.querySelector('#chart-title').textContent = title;
+
+        if (sorted.length === 0) {
+            document.querySelector('#chart-subtitle').textContent = 'Sem candidaturas para a seleção atual.';
+            renderChartMessage('Sem resultados para exibir', 'O TSE ainda não publicou candidaturas para os filtros selecionados.');
+            return;
+        }
+
+        const valueOf = (candidate) => metric === 'votes' ? candidate.votes : candidate.share;
+        const formatValue = (candidate) => metric === 'votes' ? formatNumber(candidate.votes) : percent(candidate.share);
+        const subtitle = `${sorted.length} ${sorted.length === 1 ? 'candidatura exibida' : 'candidaturas exibidas'} · ${metricLabel}`;
+        document.querySelector('#chart-subtitle').textContent = subtitle;
+
+        if (chartType === 'donut') {
+            renderDonutChart(sorted, valueOf, formatValue, subtitle);
+        } else if (chartType === 'columns') {
+            renderColumnChart(sorted, valueOf, formatValue, metric);
+        } else {
+            renderHorizontalChart(sorted, valueOf, formatValue, metric);
+        }
+    };
+
+    const renderHorizontalChart = (candidates, valueOf, formatValue, metric) => {
+        const width = 960;
+        const rowHeight = 52;
+        const barX = 240;
+        const barWidth = 570;
+        const maxValue = Math.max(...candidates.map(valueOf), 0);
+        if (maxValue <= 0) {
+            elements.chart.innerHTML = '<div class="chart-zero-state">Ainda não há votos contabilizados para comparar.</div>';
+            return;
+        }
+        const rows = candidates.map((candidate, index) => {
+            const y = index * rowHeight;
+            const bar = Math.max(2, valueOf(candidate) / maxValue * barWidth);
+            return `<g>
+                <text class="chart-label" x="8" y="${y + 21}">${escapeHtml(candidate.name.slice(0, 30))}</text>
+                <text class="chart-sub-label" x="8" y="${y + 37}">${escapeHtml(candidate.party)}</text>
+                <rect class="chart-track" x="${barX}" y="${y + 11}" width="${barWidth}" height="20" rx="6"></rect>
+                <rect x="${barX}" y="${y + 11}" width="${bar}" height="20" rx="6" fill="${index === 0 ? 'var(--orange)' : 'var(--chart-bar)'}"></rect>
+                <text class="chart-value" x="${barX + barWidth + 14}" y="${y + 26}">${escapeHtml(formatValue(candidate))}</text>
+            </g>`;
+        }).join('');
+        elements.chart.innerHTML = `<svg class="results-svg horizontal-svg" viewBox="0 0 ${width} ${candidates.length * rowHeight}" role="img" aria-label="Gráfico de barras horizontais comparando ${candidates.length} candidaturas por ${metric === 'votes' ? 'total de votos' : 'percentual de votos válidos'}">${rows}</svg>`;
+    };
+
+    const renderColumnChart = (candidates, valueOf, formatValue, metric) => {
+        const width = 960;
+        const height = 390;
+        const left = 58;
+        const top = 22;
+        const bottom = 92;
+        const plotHeight = height - top - bottom;
+        const plotWidth = width - left - 18;
+        const slot = plotWidth / candidates.length;
+        const barWidth = Math.min(48, slot * 0.62);
+        const maxValue = Math.max(...candidates.map(valueOf), 0);
+        if (maxValue <= 0) {
+            elements.chart.innerHTML = '<div class="chart-zero-state">Ainda não há votos contabilizados para comparar.</div>';
+            return;
+        }
+        const grid = [0, 0.5, 1].map((ratio) => {
+            const y = top + plotHeight * (1 - ratio);
+            const label = metric === 'votes' ? formatNumber(maxValue * ratio) : percent(maxValue * ratio);
+            return `<line class="chart-gridline" x1="${left}" x2="${width - 18}" y1="${y}" y2="${y}"></line><text class="chart-axis-label" x="${left - 8}" y="${y + 4}" text-anchor="end">${escapeHtml(label)}</text>`;
+        }).join('');
+        const bars = candidates.map((candidate, index) => {
+            const value = valueOf(candidate);
+            const barHeight = value / maxValue * plotHeight;
+            const x = left + slot * index + (slot - barWidth) / 2;
+            const y = top + plotHeight - barHeight;
+            const labelX = x + barWidth / 2;
+            return `<g>
+                <rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="5" fill="${index === 0 ? 'var(--orange)' : 'var(--chart-bar)'}">
+                    <title>${escapeHtml(candidate.name)} · ${escapeHtml(formatValue(candidate))}</title>
+                </rect>
+                <text class="chart-column-value" x="${labelX}" y="${Math.max(top + 12, y - 8)}" text-anchor="middle">${escapeHtml(formatValue(candidate))}</text>
+                <text class="chart-column-label" x="${labelX}" y="${top + plotHeight + 20}" text-anchor="middle">${escapeHtml(candidate.name.slice(0, 13))}</text>
+                <text class="chart-sub-label" x="${labelX}" y="${top + plotHeight + 36}" text-anchor="middle">${escapeHtml(candidate.party.slice(0, 11))}</text>
+            </g>`;
+        }).join('');
+        elements.chart.innerHTML = `<svg class="results-svg column-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Gráfico de colunas comparando ${candidates.length} candidaturas">${grid}${bars}</svg>`;
+    };
+
+    const renderDonutChart = (candidates, valueOf, formatValue, subtitle) => {
+        const total = candidates.reduce((sum, candidate) => sum + valueOf(candidate), 0);
+        if (total <= 0) {
+            elements.chart.innerHTML = '<div class="chart-zero-state">Ainda não há votos contabilizados para comparar.</div>';
+            return;
+        }
+        const circumference = 565.49;
+        let offset = 0;
+        const colors = ['var(--orange)', '#41b995', '#edb654', '#6684bd', '#dd7370', '#9b79bd', '#59a9c2', '#a0ad7e', '#e28d50', '#8293a4'];
+        const segments = candidates.map((candidate, index) => {
+            const length = valueOf(candidate) / total * circumference;
+            const segment = `<circle cx="150" cy="150" r="90" fill="none" stroke="${colors[index % colors.length]}" stroke-width="34" stroke-dasharray="${length} ${circumference - length}" stroke-dashoffset="${-offset}"><title>${escapeHtml(candidate.name)} · ${escapeHtml(formatValue(candidate))}</title></circle>`;
+            offset += length;
+            return segment;
+        }).join('');
+        const legend = candidates.map((candidate, index) => `
+            <div class="donut-legend-item">
+                <i style="--legend-color:${colors[index % colors.length]}"></i>
+                <span title="${escapeHtml(candidate.name)}">${escapeHtml(candidate.name.slice(0, 20))}</span>
+                <strong>${escapeHtml(formatValue(candidate))}</strong>
+            </div>`).join('');
+        elements.chart.innerHTML = `<div class="donut-chart-layout">
+            <svg class="results-svg donut-svg" viewBox="0 0 300 300" role="img" aria-label="Gráfico de rosca com a distribuição dos votos entre ${candidates.length} candidaturas">
+                <g transform="rotate(-90 150 150)">${segments}</g>
+                <text class="donut-total" x="150" y="145" text-anchor="middle">${escapeHtml(candidates.length)}</text>
+                <text class="donut-caption" x="150" y="166" text-anchor="middle">candidaturas</text>
+            </svg>
+            <div class="donut-legend" aria-label="Legenda do gráfico">${legend}</div>
+        </div><span class="visually-hidden">${escapeHtml(subtitle)}</span>`;
+    };
+
     const loadResults = async ({ quiet = false } = {}) => {
         if (requestController) requestController.abort();
         requestController = new AbortController();
@@ -242,6 +389,7 @@
             turn: elements.turn.value,
         });
         updateConnection('is-loading', 'Sincronizando com o TSE');
+        renderChartMessage('Atualizando gráfico', 'Aguardando os dados oficiais desta seleção.');
         try {
             const response = await fetch(`api/results.php?${parameters}`, {
                 headers: { Accept: 'application/json' },
@@ -280,6 +428,7 @@
             elements.candidateCount.textContent = 'Resultados indisponíveis para esta seleção.';
             elements.candidateList.innerHTML = `<div class="empty-state error-state"><span class="empty-symbol">!</span><strong>Não foi possível carregar os resultados</strong><span>${escapeHtml(error.message)}</span></div>`;
             elements.candidateTable.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(error.message)}</td></tr>`;
+            renderChartMessage('Não foi possível carregar o gráfico', error.message, true);
             if (!quiet) showToast(error.message);
         }
     };
@@ -293,7 +442,7 @@
     };
 
     const setPage = (page) => {
-        const titles = { overview: 'Visão geral', states: 'Estados', candidates: 'Candidaturas' };
+        const titles = { overview: 'Visão geral', states: 'Estados', candidates: 'Candidaturas', charts: 'Gráficos' };
         document.querySelectorAll('[data-view]').forEach((view) => view.classList.toggle('is-visible', view.dataset.view === page));
         document.querySelectorAll('[data-page]').forEach((link) => link.classList.toggle('is-active', link.dataset.page === page));
         document.querySelector('#breadcrumb-current').textContent = titles[page] || titles.overview;
@@ -313,6 +462,11 @@
     window.addEventListener('hashchange', () => setPage(location.hash.slice(1) || 'overview'));
     document.querySelectorAll('#region-filter, #office-filter, #turn-filter').forEach((filter) => {
         filter.addEventListener('change', () => loadResults());
+    });
+    document.querySelectorAll('#chart-type, #chart-metric, #chart-limit').forEach((control) => {
+        control.addEventListener('change', () => {
+            if (currentPayload) renderChart(getCandidates(currentPayload));
+        });
     });
     document.querySelector('#refresh-button').addEventListener('click', () => loadResults());
     document.querySelector('#reset-filters').addEventListener('click', () => {
