@@ -56,6 +56,7 @@ $year = htmlspecialchars($config['election_year'], ENT_QUOTES, 'UTF-8');
             <div class="breadcrumbs"><span>Brasil</span><span class="crumb-separator">/</span><strong id="breadcrumb-current">Visão geral</strong></div>
             <div class="topbar-actions">
                 <span class="connection-status" id="connection-status"><i></i><span>Conectando ao TSE</span></span>
+                <button class="icon-button" id="theme-toggle" type="button" aria-label="Alternar tema" aria-pressed="false" title="Ativar tema escuro">☾</button>
                 <button class="icon-button" id="refresh-button" type="button" aria-label="Atualizar agora" title="Atualizar agora">↻</button>
             </div>
         </header>

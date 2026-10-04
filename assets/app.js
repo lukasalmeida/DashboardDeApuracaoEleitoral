@@ -23,6 +23,35 @@
     let currentPayload = null;
     let requestController = null;
     let toastTimeout;
+    const themeToggle = document.querySelector('#theme-toggle');
+
+    const setTheme = (theme, persist = false) => {
+        const isDark = theme === 'dark';
+        document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+        themeToggle.textContent = isDark ? '☀' : '☾';
+        themeToggle.setAttribute('aria-pressed', String(isDark));
+        themeToggle.title = isDark ? 'Ativar tema claro' : 'Ativar tema escuro';
+        document.querySelector('meta[name="theme-color"]').content = isDark ? '#111821' : '#f5f7fa';
+
+        if (persist) {
+            try {
+                localStorage.setItem('apurador-theme', isDark ? 'dark' : 'light');
+            } catch (error) {
+                console.warn('Não foi possível salvar a preferência de tema.', error);
+            }
+        }
+    };
+
+    let savedTheme = null;
+    try {
+        savedTheme = localStorage.getItem('apurador-theme');
+    } catch (error) {
+        console.warn('Não foi possível carregar a preferência de tema.', error);
+    }
+    setTheme(savedTheme === 'dark' ? 'dark' : 'light');
+    themeToggle.addEventListener('click', () => {
+        setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark', true);
+    });
 
     const formatNumber = (value) => {
         const number = Number(String(value ?? '').replace(/\./g, '').replace(',', '.'));
