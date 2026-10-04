@@ -75,11 +75,13 @@ Depois aplique as alterações com `docker compose up -d --build` e abra <http:/
 
 ## Deploy no Render com CI/CD
 
-O arquivo `render.yaml` configura um Web Service Docker no Render, usando o `Dockerfile` deste repositório. Para criar o serviço, no Render selecione **New + > Blueprint** e conecte este repositório. O deploy automático do Render fica desativado para que a publicação seja feita somente depois da validação do GitHub Actions.
+O arquivo `render.yaml` configura um Web Service Docker no plano **Free**, usando o `Dockerfile` deste repositório. Para criar o serviço, no Render selecione **New + > Blueprint** e conecte este repositório. O campo `plan: free` evita selecionar um plano pago. O deploy automático do Render fica desativado para que a publicação seja feita somente depois da validação do GitHub Actions.
 
 No serviço criado no Render, gere um **Deploy Hook** em **Settings > Deploy Hook**. No GitHub, adicione a URL como secret do repositório em **Settings > Secrets and variables > Actions**, com o nome `RENDER_DEPLOY_HOOK_URL`.
 
 O workflow `.github/workflows/ci-cd.yml` verifica a sintaxe PHP e constrói a imagem Docker em pull requests e pushes para `main`. Após um push validado em `main`, ele aciona o Deploy Hook. Também é possível iniciar a validação e a publicação manualmente pela aba **Actions**, selecionando a branch `main`.
+
+O plano Free tem limitações: o serviço entra em suspensão após 15 minutos sem tráfego e pode levar cerca de um minuto para voltar ao receber uma nova requisição. Consulte os [limites atuais do plano Free do Render](https://render.com/docs/free).
 
 ## Integração
 
