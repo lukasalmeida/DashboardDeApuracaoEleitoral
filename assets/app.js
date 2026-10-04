@@ -260,12 +260,26 @@
             if (location.hash === '#states') renderStateCards();
         } catch (error) {
             if (error.name === 'AbortError') return;
+            currentPayload = null;
             updateConnection('is-error', 'Dados indisponíveis');
             elements.lastUpdate.textContent = 'Não foi possível atualizar';
-            if (!currentPayload) {
-                elements.candidateList.innerHTML = `<div class="empty-state error-state"><span class="empty-symbol">!</span><strong>Não foi possível carregar os resultados</strong><span>${escapeHtml(error.message)}</span></div>`;
-                elements.candidateTable.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(error.message)}</td></tr>`;
-            }
+            document.querySelector('#sections-count').textContent = '—';
+            document.querySelector('#sections-percent').textContent = 'Dados indisponíveis para esta seleção';
+            document.querySelector('#sections-progress').style.width = '0%';
+            document.querySelector('#sections-badge').textContent = 'TSE';
+            document.querySelector('#votes-count').textContent = '—';
+            document.querySelector('#valid-votes').textContent = '— válidos';
+            document.querySelector('#abstention-rate').textContent = '—';
+            document.querySelector('#abstention-count').textContent = '— ausentes';
+            document.querySelector('#valid-percent').textContent = '—';
+            document.querySelector('#legend-valid').textContent = '—';
+            document.querySelector('#legend-null').textContent = '—';
+            document.querySelector('#legend-white').textContent = '—';
+            document.querySelector('#legend-absent').textContent = '—';
+            document.querySelector('.donut').style.setProperty('--valid-share', '0%');
+            elements.candidateCount.textContent = 'Resultados indisponíveis para esta seleção.';
+            elements.candidateList.innerHTML = `<div class="empty-state error-state"><span class="empty-symbol">!</span><strong>Não foi possível carregar os resultados</strong><span>${escapeHtml(error.message)}</span></div>`;
+            elements.candidateTable.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(error.message)}</td></tr>`;
             if (!quiet) showToast(error.message);
         }
     };

@@ -39,6 +39,10 @@ if ($region !== 'br' && !in_array($region, $validRegions, true)) {
     respond(400, ['error' => 'UF inválida.']);
 }
 
+if ($officeConfig['scope'] === 'state' && $region === 'br') {
+    respond(400, ['error' => 'Selecione uma UF: o TSE publica os resultados desses cargos por estado, não em uma totalização nacional.']);
+}
+
 if ($municipality !== '' && ($region === 'br' || !preg_match('/^\d{5}$/', $municipality))) {
     respond(400, ['error' => 'Informe um código TSE de município com cinco dígitos e uma UF válida.']);
 }
