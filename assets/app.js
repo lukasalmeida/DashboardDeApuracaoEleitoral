@@ -10,6 +10,7 @@
         ['sp', 'São Paulo'], ['se', 'Sergipe'], ['to', 'Tocantins'],
     ];
     const elements = {
+        year: document.querySelector('#year-filter'),
         region: document.querySelector('#region-filter'),
         office: document.querySelector('#office-filter'),
         turn: document.querySelector('#turn-filter'),
@@ -22,10 +23,16 @@
         chartType: document.querySelector('#chart-type'),
         chartMetric: document.querySelector('#chart-metric'),
         chartLimit: document.querySelector('#chart-limit'),
+        electedPresidentResults: document.querySelector('#elected-president-results'),
+        electedStatesGrid: document.querySelector('#elected-states-grid'),
+        electedStateDetails: document.querySelector('#elected-state-details'),
         toast: document.querySelector('#toast'),
     };
     let currentPayload = null;
     let requestController = null;
+    let electedLoadToken = 0;
+    let electedView = 'president';
+    let electedRegion = null;
     let toastTimeout;
     const themeToggle = document.querySelector('#theme-toggle');
 
@@ -217,11 +224,10 @@
             const party = getValue(candidate, ['sgp', 'partido', 'siglaPartido'], '—');
             const votes = getValue(candidate, ['vap', 'votos', 'votosNominais'], 0);
             const votePercent = percentNumber(getValue(candidate, ['pvap', 'percentual', 'percentualVotos'], '0'));
-            const image = candidate.foto ? `<img src="${escapeHtml(candidate.foto)}" alt="" loading="lazy">` : `<span>${escapeHtml(initials(name))}</span>`;
             return `<article class="candidate-row">
                 <span class="candidate-rank">${String(index + 1).padStart(2, '0')}</span>
-                <span class="candidate-avatar">${image}</span>
-                <span class="candidate-details"><strong>${escapeHtml(name)}</strong><small>${escapeHtml(party)}</small></span>
+                ${renderCandidateAvatar(candidate, name)}
+                <span class="candidate-details"><strong>${renderCandidateName(candidate, name)}</strong><small>${escapeHtml(party)}</small></span>
                 <span class="candidate-votes"><strong>${formatNumber(votes)}</strong><small>votos</small></span>
                 <span class="candidate-share"><strong>${percent(votePercent)}</strong><span class="mini-track"><i style="width:${Math.min(100, numeric(votePercent))}%"></i></span></span>
             </article>`;
@@ -230,15 +236,140 @@
         elements.candidateTable.innerHTML = sorted.map((candidate, index) => `
             <tr>
                 <td><span class="table-rank">${String(index + 1).padStart(2, '0')}</span></td>
-                <td><strong>${escapeHtml(getValue(candidate, ['nm', 'nmu', 'nome', 'nomeurna', 'cc'], 'Candidatura'))}</strong></td>
+                <td><span class="candidate-table-name">${renderCandidateAvatar(candidate, getValue(candidate, ['nm', 'nmu', 'nome', 'nomeurna', 'cc'], 'Candidatura'))}<strong>${renderCandidateName(candidate, getValue(candidate, ['nm', 'nmu', 'nome', 'nomeurna', 'cc'], 'Candidatura'))}</strong></span></td>
                 <td>${escapeHtml(getValue(candidate, ['sgp', 'partido', 'siglaPartido']))}</td>
                 <td><span class="candidate-status">${escapeHtml(getValue(candidate, ['st', 'situacao', 'dsSitTotTurno'], 'Em apuração'))}</span></td>
                 <td><strong>${formatNumber(getValue(candidate, ['vap', 'votos', 'votosNominais'], 0))}</strong></td>
                 <td>${percent(getValue(candidate, ['pvap', 'percentual', 'percentualVotos'], 0))}</td>
             </tr>`).join('');
+        bindCandidateImageFallbacks(elements.candidateList);
+        bindCandidateImageFallbacks(elements.candidateTable);
     };
 
     const initials = (name) => String(name).split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+
+    const isElected = (candidate) => {
+        const electionFlag = String(getValue(candidate, ['e', 'eleito', 'isElected'], '')).toLowerCase();
+        const status = String(getValue(candidate, ['st', 'dsSitTotTurno', 'situacaoTurno', 'situacao'], ''))
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toUpperCase();
+        return ['s', 'sim', 'true', '1'].includes(electionFlag) || /^ELEIT[OA]\b/.test(status);
+    };
+
+    const renderCandidateName = (candidate, name) => {
+        const badge = isElected(candidate) ? '<span class="candidate-elected-badge" aria-label="Candidato eleito">ELEITO</span>' : '';
+        return `<span class="candidate-name"><span class="candidate-name-label">${escapeHtml(name)}</span>${badge}</span>`;
+    };
+
+    const candidatePhotoUrl = (candidate, regionOverride = '') => {
+        const photo = getValue(candidate, ['foto', 'fotoUrl', 'urlFoto', 'foto_url'], '');
+        if (photo) return String(photo);
+
+        const candidateId = String(getValue(candidate, ['sqcand', 'sqCandidato', 'sq_candidato'], ''));
+        const year = String(elements.year.value);
+        if (!/^\d{12}$/.test(candidateId) || !/^\d{4}$/.test(year)) return '';
+
+        const region = regionOverride
+            ? (regionOverride === 'br' ? 'BR' : regionOverride.toUpperCase())
+            : elements.office.value === '1' ? 'BR' : elements.region.value.toUpperCase();
+        return `https://divulgacandcontas.tse.jus.br/divulga/rest/arquivo/img/204060${year}/${candidateId}/${region}`;
+    };
+
+    const renderCandidateAvatar = (candidate, name, region = '') => {
+        const photo = candidatePhotoUrl(candidate, region);
+        const image = photo ? `<img src="${escapeHtml(photo)}" alt="" loading="lazy">` : '';
+        return `<span class="candidate-avatar"><span>${escapeHtml(initials(name))}</span>${image}</span>`;
+    };
+
+    const bindCandidateImageFallbacks = (container) => {
+        container.querySelectorAll('.candidate-avatar img').forEach((image) => {
+            image.addEventListener('error', () => image.remove(), { once: true });
+        });
+    };
+
+    const fetchElectionResults = async (region, office) => {
+        const parameters = new URLSearchParams({ region, office, turn: elements.turn.value });
+        const response = await fetch(`api/results.php?${parameters}`, {
+            headers: { Accept: 'application/json' },
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Falha ao consultar os resultados.');
+        return data;
+    };
+
+    const electedCandidates = (data) => getCandidates(data).filter(isElected);
+
+    const renderElectedCandidates = (candidates, emptyMessage, region) => {
+        if (candidates.length === 0) {
+            return `<div class="elected-empty">${escapeHtml(emptyMessage)}</div>`;
+        }
+        return `<div class="elected-candidate-list">${candidates.map((candidate) => {
+            const name = getValue(candidate, ['nm', 'nmu', 'nome', 'nomeurna', 'cc'], 'Candidatura');
+            const party = getValue(candidate, ['sgp', 'partido', 'siglaPartido'], '—');
+            return `<article class="elected-candidate">
+                ${renderCandidateAvatar(candidate, name, region)}
+                <span class="elected-candidate-info"><strong>${renderCandidateName(candidate, name)}</strong><small>${escapeHtml(party)}</small></span>
+            </article>`;
+        }).join('')}</div>`;
+    };
+
+    const loadElectedPresident = async () => {
+        const token = ++electedLoadToken;
+        elements.electedPresidentResults.innerHTML = '<div class="elected-loading">Consultando resultado nacional do TSE…</div>';
+        try {
+            const data = await fetchElectionResults('br', '1');
+            if (token !== electedLoadToken) return;
+            elements.electedPresidentResults.innerHTML = renderElectedCandidates(
+                electedCandidates(data),
+                'O TSE ainda não confirmou candidatura eleita para a Presidência neste turno.',
+                'br',
+            );
+            bindCandidateImageFallbacks(elements.electedPresidentResults);
+        } catch (error) {
+            if (token !== electedLoadToken) return;
+            elements.electedPresidentResults.innerHTML = `<div class="elected-error">${escapeHtml(error.message)}</div>`;
+        }
+    };
+
+    const renderElectedStateCards = () => {
+        elements.electedStatesGrid.innerHTML = regions.map(([code, name]) => `
+            <button type="button" class="state-card${electedRegion === code ? ' is-selected' : ''}" data-elected-region="${code}">
+                <span class="state-code">${code.toUpperCase()}</span><span class="state-card-name">${name}</span><span class="state-arrow">→</span>
+            </button>`).join('');
+    };
+
+    const loadElectedState = async (region) => {
+        electedRegion = region;
+        renderElectedStateCards();
+        const token = ++electedLoadToken;
+        const regionName = regions.find(([code]) => code === region)?.[1] ?? region.toUpperCase();
+        const offices = [
+            ['3', 'Governador'],
+            ['5', 'Senador'],
+            ['6', 'Deputado federal'],
+            [region === 'df' ? '8' : '7', region === 'df' ? 'Deputado distrital' : 'Deputado estadual'],
+        ];
+        elements.electedStateDetails.innerHTML = `<div class="panel-heading"><div><h2>${escapeHtml(regionName)}</h2><p>Eleitos confirmados no ${elements.turn.value}º turno</p></div></div><div class="elected-office-grid">${offices.map(([, name]) => `<section class="elected-office-card"><h3>${escapeHtml(name)}</h3><div class="elected-loading">Consultando o TSE…</div></section>`).join('')}</div>`;
+
+        const cards = [...elements.electedStateDetails.querySelectorAll('.elected-office-card')];
+        for (const [index, [office, name]] of offices.entries()) {
+            try {
+                const data = await fetchElectionResults(region, office);
+                if (token !== electedLoadToken) return;
+                cards[index].innerHTML = `<h3>${escapeHtml(name)}</h3>${renderElectedCandidates(
+                    electedCandidates(data),
+                    'Nenhuma candidatura eleita confirmada pelo TSE.',
+                    region,
+                )}`;
+                bindCandidateImageFallbacks(cards[index]);
+            } catch (error) {
+                if (token !== electedLoadToken) return;
+                cards[index].innerHTML = `<h3>${escapeHtml(name)}</h3><div class="elected-error">${escapeHtml(error.message)}</div>`;
+            }
+        }
+    };
 
     const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -442,11 +573,16 @@
     };
 
     const setPage = (page) => {
-        const titles = { overview: 'Visão geral', states: 'Estados', candidates: 'Candidaturas', charts: 'Gráficos' };
+        const titles = { overview: 'Visão geral', states: 'Estados', elected: 'Eleitos', candidates: 'Candidaturas', charts: 'Gráficos' };
         document.querySelectorAll('[data-view]').forEach((view) => view.classList.toggle('is-visible', view.dataset.view === page));
         document.querySelectorAll('[data-page]').forEach((link) => link.classList.toggle('is-active', link.dataset.page === page));
         document.querySelector('#breadcrumb-current').textContent = titles[page] || titles.overview;
         if (page === 'states') renderStateCards();
+        if (page === 'elected') {
+            renderElectedStateCards();
+            if (electedView === 'president') loadElectedPresident();
+            else if (electedRegion) loadElectedState(electedRegion);
+        }
         if (page === 'candidates' && currentPayload) renderCandidates(getCandidates(currentPayload));
         document.querySelector('#sidebar').classList.remove('is-open');
     };
@@ -461,14 +597,26 @@
     });
     window.addEventListener('hashchange', () => setPage(location.hash.slice(1) || 'overview'));
     document.querySelectorAll('#region-filter, #office-filter, #turn-filter').forEach((filter) => {
-        filter.addEventListener('change', () => loadResults());
+        filter.addEventListener('change', () => {
+            loadResults();
+            if (filter === elements.turn && location.hash === '#elected') {
+                if (electedView === 'president') loadElectedPresident();
+                else if (electedRegion) loadElectedState(electedRegion);
+            }
+        });
     });
     document.querySelectorAll('#chart-type, #chart-metric, #chart-limit').forEach((control) => {
         control.addEventListener('change', () => {
             if (currentPayload) renderChart(getCandidates(currentPayload));
         });
     });
-    document.querySelector('#refresh-button').addEventListener('click', () => loadResults());
+    document.querySelector('#refresh-button').addEventListener('click', () => {
+        loadResults();
+        if (location.hash === '#elected') {
+            if (electedView === 'president') loadElectedPresident();
+            else if (electedRegion) loadElectedState(electedRegion);
+        }
+    });
     document.querySelector('#reset-filters').addEventListener('click', () => {
         elements.region.value = 'br';
         elements.office.value = '1';
@@ -479,6 +627,26 @@
         document.querySelector('#sidebar').classList.toggle('is-open');
     });
     document.addEventListener('click', (event) => {
+        const electedTab = event.target.closest('[data-elected-view]');
+        if (electedTab) {
+            electedView = electedTab.dataset.electedView;
+            document.querySelectorAll('[data-elected-view]').forEach((tab) => {
+                const selected = tab === electedTab;
+                tab.classList.toggle('is-active', selected);
+                tab.setAttribute('aria-selected', String(selected));
+            });
+            document.querySelector('#elected-president-view').hidden = electedView !== 'president';
+            document.querySelector('#elected-states-view').hidden = electedView !== 'states';
+            electedLoadToken++;
+            if (electedView === 'president') loadElectedPresident();
+            else if (electedRegion) loadElectedState(electedRegion);
+            return;
+        }
+        const electedStateButton = event.target.closest('[data-elected-region]');
+        if (electedStateButton) {
+            loadElectedState(electedStateButton.dataset.electedRegion);
+            return;
+        }
         const stateButton = event.target.closest('[data-region]');
         if (!stateButton) return;
         elements.region.value = stateButton.dataset.region;

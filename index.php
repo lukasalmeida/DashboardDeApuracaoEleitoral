@@ -32,6 +32,9 @@ $year = htmlspecialchars($config['election_year'], ENT_QUOTES, 'UTF-8');
             <a class="nav-link" href="#states" data-page="states">
                 <span class="nav-icon">⌖</span><span>Estados</span>
             </a>
+            <a class="nav-link" href="#elected" data-page="elected">
+                <span class="nav-icon">✓</span><span>Eleitos</span>
+            </a>
             <a class="nav-link" href="#candidates" data-page="candidates">
                 <span class="nav-icon">♙</span><span>Candidaturas</span>
             </a>
@@ -187,6 +190,33 @@ $year = htmlspecialchars($config['election_year'], ENT_QUOTES, 'UTF-8');
                 <section class="panel states-page-panel">
                     <div class="panel-heading"><div><h2>Unidades federativas</h2><p>Os dados são carregados para o cargo e turno selecionados</p></div></div>
                     <div class="states-grid" id="states-grid"></div>
+                </section>
+            </section>
+
+            <section class="page-view" id="page-elected" data-view="elected">
+                <div class="page-heading">
+                    <div><div class="eyebrow">RESULTADOS CONFIRMADOS</div><h1>Eleitos</h1><p class="page-description">Candidaturas marcadas como eleitas nos dados oficiais do TSE.</p></div>
+                </div>
+                <section class="panel elected-page-panel">
+                    <div class="elected-tabs" role="tablist" aria-label="Abrangência dos eleitos">
+                        <button class="elected-tab is-active" type="button" role="tab" aria-selected="true" data-elected-view="president">Presidente</button>
+                        <button class="elected-tab" type="button" role="tab" aria-selected="false" data-elected-view="states">Estados</button>
+                    </div>
+                    <div id="elected-president-view" class="elected-view">
+                        <div class="panel-heading"><div><h2>Presidente da República</h2><p>Resultado nacional · turno selecionado</p></div><span class="data-tag"><i></i> DADOS DO TSE</span></div>
+                        <div id="elected-president-results" class="elected-results" aria-live="polite">
+                            <div class="empty-state"><span class="empty-symbol">◷</span><strong>Aguardando resultados</strong><span>Os eleitos serão exibidos quando o TSE publicar a confirmação.</span></div>
+                        </div>
+                    </div>
+                    <div id="elected-states-view" class="elected-view" hidden>
+                        <section class="elected-regions">
+                            <div class="panel-heading"><div><h2>Escolha um estado</h2><p>Consulte governador, senador e representantes eleitos</p></div></div>
+                            <div class="states-grid" id="elected-states-grid"></div>
+                        </section>
+                        <section id="elected-state-details" class="elected-state-details" aria-live="polite">
+                            <div class="empty-state"><span class="empty-symbol">⌖</span><strong>Selecione uma unidade federativa</strong><span>Os cargos disponíveis variam conforme o estado.</span></div>
+                        </section>
+                    </div>
                 </section>
             </section>
 

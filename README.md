@@ -4,14 +4,15 @@ Apurador Eleitoral é um painel web em PHP para acompanhar a apuração das elei
 
 ## Descrição do repositório
 
-Este repositório reúne uma interface de acompanhamento eleitoral responsiva, capaz de exibir visão geral da apuração, resultados por estado, ranking de candidaturas e gráficos personalizáveis. A aplicação usa o servidor PHP como ponte para buscar os dados do TSE, evitando expor diretamente a origem oficial no navegador e permitindo que a tela seja atualizada automaticamente sem depender de chamadas cross-origin no cliente.
+Este repositório reúne uma interface de acompanhamento eleitoral responsiva, capaz de exibir visão geral da apuração, resultados por estado, candidaturas eleitas, ranking de candidaturas e gráficos personalizáveis. A aplicação usa o servidor PHP como ponte para buscar os dados do TSE, evitando expor diretamente a origem oficial no navegador e permitindo que a tela seja atualizada automaticamente sem depender de chamadas cross-origin no cliente.
 
 ### Principais funcionalidades
 
 - Consulta dos arquivos oficiais de resultado do TSE
 - Atualização automática do painel em intervalos regulares
 - Filtros por eleição, UF, cargo e turno
-- Visualização em quatro perspectivas: visão geral, estados, candidaturas e gráficos
+- Visualização em cinco perspectivas: visão geral, estados, eleitos, candidaturas e gráficos
+- Página de eleitos com resultado nacional para Presidente e consulta por estado para Governador, Senador e Deputados
 - Gráficos de barras horizontais, colunas ou rosca, configuráveis por votos ou percentual e pelas cinco ou dez candidaturas mais votadas
 - Proxy local para manter a fonte dos dados fixa e controlada
 - Suporte a execução local e via Docker Compose
