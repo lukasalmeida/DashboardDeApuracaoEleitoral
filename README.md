@@ -9,7 +9,7 @@ Este repositório reúne uma interface de acompanhamento eleitoral responsiva, c
 ### Principais funcionalidades
 
 - Consulta dos arquivos oficiais de resultado do TSE
-- Atualização automática do painel em intervalos regulares
+- Atualização automática do painel a cada 15 segundos enquanto a apuração estiver abaixo de 100% das seções; ao concluir, novas consultas automáticas são interrompidas
 - Filtros por eleição, UF, cargo e turno
 - Visualização em cinco perspectivas: visão geral, estados, eleitos, candidaturas e gráficos
 - Página de eleitos com resultado nacional para Presidente e consulta por estado para Governador, Senador e Deputados
