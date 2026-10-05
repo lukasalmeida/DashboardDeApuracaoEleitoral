@@ -138,7 +138,7 @@
                 }
             }
         }
-        const rate = numeric(summary.sectionsRate);
+        const rate = percentNumber(summary.sectionsRate);
         if (summary.sections === '—') {
             summary.sections = summary.sectionsTotal === '—' || summary.sectionsRate === '—'
                 ? '—'
@@ -160,6 +160,15 @@
         elements.connection.querySelector('span').textContent = text;
     };
 
+    const getCompletion = (data) => {
+        const summary = findSummary(data);
+        const sections = numeric(summary.sections);
+        const totalSections = numeric(summary.sectionsTotal);
+        return summary.sectionsRate === '—'
+            ? (totalSections > 0 ? Math.min(100, sections / totalSections * 100) : 0)
+            : Math.min(100, percentNumber(summary.sectionsRate));
+    };
+
     const showToast = (message) => {
         elements.toast.textContent = message;
         elements.toast.classList.add('is-visible');
@@ -170,11 +179,8 @@
     const updateSummary = (data) => {
         const summary = findSummary(data);
         const candidates = getCandidates(data);
-        const sections = numeric(summary.sections);
         const totalSections = numeric(summary.sectionsTotal);
-        const completion = summary.sectionsRate === '—'
-            ? (totalSections > 0 ? Math.min(100, sections / totalSections * 100) : 0)
-            : Math.min(100, numeric(summary.sectionsRate));
+        const completion = getCompletion(data);
         const valid = numeric(summary.valid);
         const nullVotes = numeric(summary.nullVotes);
         const whiteVotes = numeric(summary.whiteVotes);
@@ -530,7 +536,10 @@
             if (!response.ok) throw new Error(data.error || 'Falha ao consultar os resultados.');
             currentPayload = data;
             updateSummary(data);
-            updateConnection('is-connected', 'Atualização automática ativa');
+            updateConnection(
+                'is-connected',
+                getCompletion(data) >= 100 ? 'Apuração concluída' : 'Atualização automática ativa',
+            );
             elements.lastUpdate.textContent = new Intl.DateTimeFormat('pt-BR', {
                 hour: '2-digit', minute: '2-digit', second: '2-digit',
             }).format(new Date());
@@ -661,5 +670,9 @@
     if (location.hash) setPage(location.hash.slice(1));
     renderStateCards();
     loadResults();
-    window.setInterval(() => loadResults({ quiet: true }), refreshInterval);
+    window.setInterval(() => {
+        if (!currentPayload || getCompletion(currentPayload) < 100) {
+            loadResults({ quiet: true });
+        }
+    }, refreshInterval);
 })();
