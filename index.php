@@ -78,6 +78,14 @@ $year = htmlspecialchars($config['election_year'], ENT_QUOTES, 'UTF-8');
                     <div class="last-update"><span>Última atualização</span><strong id="last-update">Aguardando dados</strong></div>
                 </div>
 
+                <aside class="turn-alert" role="note" aria-labelledby="turn-alert-title">
+                    <span class="turn-alert-icon" aria-hidden="true">!</span>
+                    <div>
+                        <strong id="turn-alert-title">Atenção: acompanhamento do 2º turno</strong>
+                        <p>O apurador abre com o 2º turno selecionado. Confira o filtro de turno antes de consultar os resultados.</p>
+                    </div>
+                </aside>
+
                 <div class="filter-bar">
                     <label class="filter-control">
                         <span>ELEIÇÃO</span>
@@ -113,7 +121,7 @@ $year = htmlspecialchars($config['election_year'], ENT_QUOTES, 'UTF-8');
                     <span class="filter-divider"></span>
                     <label class="filter-control">
                         <span>TURNO</span>
-                        <select id="turn-filter" aria-label="Turno"><option value="1">1º turno</option><option value="2">2º turno</option></select>
+                        <select id="turn-filter" aria-label="Turno"><option value="1">1º turno</option><option value="2" selected>2º turno</option></select>
                     </label>
                     <button class="filter-reset" id="reset-filters" type="button" title="Restaurar filtros">↺</button>
                 </div>

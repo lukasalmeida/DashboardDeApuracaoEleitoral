@@ -629,7 +629,7 @@
     document.querySelector('#reset-filters').addEventListener('click', () => {
         elements.region.value = 'br';
         elements.office.value = '1';
-        elements.turn.value = '1';
+        elements.turn.value = '2';
         loadResults();
     });
     document.querySelector('#menu-toggle').addEventListener('click', () => {
