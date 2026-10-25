@@ -85,6 +85,11 @@ h1 { font: 700 25px Manrope, sans-serif; letter-spacing: -.8px; }
 .last-update { display: grid; justify-items: end; gap: 5px; padding-bottom: 3px; color: var(--muted); font-size: 9px; }
 .last-update strong { color: #536175; font-size: 10px; font-weight: 600; }
 
+.turn-alert { display: flex; align-items: center; gap: 12px; margin: -7px 0 17px; padding: 12px 15px; border: 1px solid #f3d19b; border-radius: 9px; background: #fff8eb; color: #79531e; }
+.turn-alert-icon { display: grid; width: 25px; height: 25px; flex: 0 0 25px; place-items: center; border-radius: 50%; background: #f5dfaf; color: #8c5a12; font-size: 14px; font-weight: 800; }
+.turn-alert strong { font-size: 10px; font-weight: 700; }
+.turn-alert p { margin-top: 3px; color: #896c43; font-size: 9px; line-height: 1.5; }
+
 .filter-bar { display: flex; min-height: 67px; align-items: center; gap: 0; margin-bottom: 17px; padding: 0 15px; border: 1px solid #e9edf2; border-radius: 10px; background: var(--white); box-shadow: 0 3px 12px #1c355008; }
 .filter-control { display: grid; min-width: 108px; gap: 6px; padding: 0 15px; }
 .filter-control:first-child { padding-left: 3px; }
@@ -284,6 +289,9 @@ html[data-theme="dark"] .panel,
 html[data-theme="dark"] .state-chips button,
 html[data-theme="dark"] .state-card,
 html[data-theme="dark"] .toast { border-color: #303c4b; background-color: #1b2531; color: var(--ink); }
+html[data-theme="dark"] .turn-alert { border-color: #6c512d; background: #30291e; color: #f2d59f; }
+html[data-theme="dark"] .turn-alert-icon { background: #594322; color: #f2d59f; }
+html[data-theme="dark"] .turn-alert p { color: #c7b28e; }
 html[data-theme="dark"] .icon-button:hover { border-color: var(--orange); color: var(--orange); }
 html[data-theme="dark"] .primary-summary .card-topline { color: #fff3e8; }
 html[data-theme="dark"] .primary-summary .metric-foot { color: #ffe1cd; }
@@ -388,6 +396,7 @@ html[data-theme="dark"] .error-state .empty-symbol { background: #3c282a; color:
     .page-heading { align-items: flex-start; margin-bottom: 18px; }
     h1 { font-size: 20px; }
     .page-description { max-width: 330px; font-size: 10px; line-height: 1.55; }
+    .turn-alert { align-items: flex-start; margin-top: -3px; padding: 10px 11px; }
     .last-update { min-width: 84px; margin-top: 19px; font-size: 8px; text-align: right; }
     .last-update strong { font-size: 8px; }
     .filter-bar { min-height: 0; flex-wrap: wrap; gap: 0; padding: 7px 8px; }
